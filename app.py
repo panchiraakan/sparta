@@ -1,51 +1,25 @@
-from bs4 import BeautifulSoup
-import requests
-from pymongo import MongoClient
-from flask import Flask, render_template, request, jsonify
+import sqlite3
+
+def init_db():
+    with sqlite3.connect('comments.db') as db:
+        db.execute('CREATE TABLE IF NOT EXISTS comments (comment TEXT)')
+
+def add_comment(comment: str):
+    with sqlite3.connect('comments.db') as db:
+        db.execute('INSERT INTO comments (comment) VALUES (?)', (comment,))
+
+def get_comments():
+    with sqlite3.connect('comments.db') as db:
+        return db.execute('SELECT comment FROM comments').fetchall()
+
+from flask import Flask, request, render_template
+
 app = Flask(__name__)
 
-client = MongoClient(
-    'mongodb+srv://test:sparta@cluster0.ag6su3e.mongodb.net/?retryWrites=true&w=majority')
-db = client.dbsparta
-
-
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-@app.route("/movie", methods=["POST"])
-def movie_post():
-    url_receive = request.form['url_give']
-    comment_receive = request.form['comment_give']
-    star_receive = request.form['star_give']
-
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'}
-    data = requests.get(url_receive, headers=headers)
-
-    soup = BeautifulSoup(data.text, 'html.parser')
-
-    ogimage = soup.select_one('meta[property="og:image"]')['content']
-    ogtitle = soup.select_one('meta[property="og:title"]')['content']
-    ogdesc = soup.select_one('meta[property="og:description"]')['content']
-
-
-    doc = {
-        'title':ogtitle,
-        'desc':ogdesc,
-				'image':ogimage,
-				'star':star_receive,
-        'comment':comment_receive
-    }
-
-    db.movies.insert_one(doc)
-
-    return jsonify({'msg':'保存完了!'})
-
-@app.route("/movie", methods=["GET"])
-def movie_get():
-    all_movies = list(db.movies.find({},{'_id':False}))
-    return jsonify({'result':all_movies})
-
-if __name__ == '__main__':
-    app.run('0.0.0.0', port=5000, debug=True)
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        comment = request.form['comment']
+        add_comment(comment)
+    comments = get_comments()
+    return render_template('index.html', comments=comments)

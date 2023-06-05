@@ -1,25 +1,30 @@
-import sqlite3
-
-def init_db():
-    with sqlite3.connect('comments.db') as db:
-        db.execute('CREATE TABLE IF NOT EXISTS comments (comment TEXT)')
-
-def add_comment(comment: str):
-    with sqlite3.connect('comments.db') as db:
-        db.execute('INSERT INTO comments (comment) VALUES (?)', (comment,))
-
-def get_comments():
-    with sqlite3.connect('comments.db') as db:
-        return db.execute('SELECT comment FROM comments').fetchall()
-
-from flask import Flask, request, render_template
+from flask import Flask, render_template, request, jsonify
+from pymongo import MongoClient
+from pokeapi import retrieve_pokemons
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        comment = request.form['comment']
-        add_comment(comment)
-    comments = get_comments()
-    return render_template('index.html', comments=comments)
+client = MongoClient('mongodb+srv://basket19250:<password>@cluster0.8wbmfzp.mongodb.net/?retryWrites=true&w=majority')
+db = client.dbsparta
+
+@app.route('/')
+def home():
+   return render_template('index.html')
+
+@app.route("/SpartaChatbot", methods=["POST"])
+def SpartaChatbot_post():
+    name_receive = request.form['name_give']
+    address_receive = request.form['address_give']
+    size_receive = request.form['size_give']
+
+    doc = {
+        'name': name_receive,
+        'address': address_receive,
+        'size': size_receive
+    }
+
+@app.route("/pokemons", methods=["GET"])
+def getpokemons():
+
+    pokemons = retrieve_pokemons()
+    return jsonify(pokemons)

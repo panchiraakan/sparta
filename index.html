@@ -8,20 +8,57 @@
         $(document).ready(function () {
           show_order();
         });
-        function show_order() {
-          fetch('/pokemons').then((res) => res.json()).then((data) => {
-            console.log(data)
-            alert(data['msg'])
-          })
-        }
-        function save_order() {
-          let formData = new FormData();
-          formData.append("sample_give", "サンプルデータ");
-    
-          fetch('/mars', { method: "POST", body: formData }).then((res) => res.json()).then((data) => {
-            console.log(data);
-            alert(data["msg"]);
-          });
+        // function show_order() {
+        //   $("#pokemon-display").empty()
+        //   let offset = 0
+        //   for (let i = 0; i < 15; i++) {
+        //     console.log(offset)
+        //     fetch('/pokemons' + "?offset=" + offset).then((res) => res.json()).then((data) => {
+        //     //console.log(data)
+        //     let rows = data
+	      //       rows.forEach((a) => {
+        //       let name = a["name"]
+        //       let image_url = a["image_url"]
+        //       console.log(image_url)
+              
+        //       //let image = `<img src=\""${image_url}\"">`
+        //       let image = '<img src="' + image_url + '">'
+
+        //       let temp_html = `<tr>
+        //                 <td>${name}</td>
+        //                 <td>${image}</td>
+        //               </tr>`
+        //       $("#pokemon-display").append(temp_html)
+        //     })
+        //   })
+        //   offset = offset + 1
+        //   }
+        // }
+
+        async function show_order() {
+          $("#pokemon-display").empty()
+          let offset = 0
+          for (let i = 0; i < 15; i++) {
+            console.log(offset)
+            let data = await fetch('/pokemons' + "?offset="+ offset)
+            //console.log(data)
+            let rows = await data.json()
+	            rows.forEach((a) => {
+              let name = a["name"]
+              let image_url = a["image_url"]
+              console.log(image_url)
+              
+              //let image = `<img src=\""${image_url}\"">`
+              let image = '<img src="' + image_url + '">'
+
+              let temp_html = `<tr>
+                        <td>${name}</td>
+                        <td>${image}</td>
+                      </tr>`
+              $("#pokemon-display").append(temp_html)
+            })
+          offset = offset + 10
+          }
         }
       </script>
 </head>
@@ -35,7 +72,7 @@
 <style>
 body {
     font-family: Arial, sans-serif;
-    background-color: #F5F5F5;
+    background: radial-gradient(#F2B9A1, #EA6264 ) 
 }
 
 .container {
